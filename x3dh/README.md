@@ -6,7 +6,8 @@ implementation and this one, but for the most part this version follows
 the same cryptographic specifications as the ones outlined
 [here](https://signal.org/docs/specifications/x3dh/).
 
-The `xeddsa` library is adapted from the `python-xeddsa` package, and
+The `xeddsa` library is adapted from the
+[`python-xeddsa`](https://github.com/Syndace/python-xeddsa) package, and
 has been modified to use `pynacl` instead of `libnacl`. The `xeddsa.ref10`
 library is copied from the same package, where it was adapted from the
 SUPERCOP library.
