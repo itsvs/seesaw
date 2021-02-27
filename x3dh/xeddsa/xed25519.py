@@ -10,18 +10,16 @@ from .ref10 import (
     fe_sub,
     fe_mul,
     fe_invert,
-
     ge_p3_tobytes,
     ScalarBytes,
     ge_scalarmult_base,
-
     ScalarReduceBytes,
     sc_reduce,
     sc_muladd,
-
     sc_neg,
-    sc_cmov
+    sc_cmov,
 )
+
 
 class XEd25519:
     """
@@ -30,7 +28,8 @@ class XEd25519:
 
     The :mod:`xeddsa.implementations` module ships such subclasses.
     """
-    def __init__(self, private_key = None, public_key = None):
+
+    def __init__(self, private_key=None, public_key=None):
         """
         Create an XEdDSA object from Montgomery key material, to encrypt AND sign data using just one
         Montgomery key pair.
@@ -91,7 +90,7 @@ class XEd25519:
 
         # Calculate the parameters (u - 1) and (u + 1)
         public_minus_one = fe_sub(public_fe, one)
-        public_plus_one  = fe_add(public_fe, one)
+        public_plus_one = fe_add(public_fe, one)
 
         # Prepare inv(u + 1)
         public_plus_one = fe_invert(public_plus_one)
@@ -100,7 +99,7 @@ class XEd25519:
         ed_pub = fe_mul(public_minus_one, public_plus_one)
         return bytes(fe_tobytes(ed_pub))
 
-    def sign(self, data: bytes, nonce = None):
+    def sign(self, data: bytes, nonce=None):
         """
         Sign data using the Montgomery private key stored in this XEdDSA instance.
 

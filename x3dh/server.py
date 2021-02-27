@@ -4,10 +4,13 @@ import requests
 from flask import Flask, abort, request
 
 if not os.path.exists("xeddsa/_crypto_sign.o"):
-    raise ModuleNotFoundError("The _crypto_sign library must be built first. Build it by running `cd xeddsa && python3 ref10/build.py`.")
+    raise ModuleNotFoundError(
+        "The _crypto_sign library must be built first. Build it by running `cd xeddsa && python3 ref10/build.py`."
+    )
 
 app = Flask(__name__)
 connections = {}
+
 
 @app.route("/register_user", methods=["POST"])
 def register_user():
@@ -32,7 +35,7 @@ def get_prekey_bundle(person: str):
     if person not in connections:
         abort(404)
 
-    person = connections[person]['prekey_bundle']
+    person = connections[person]["prekey_bundle"]
     opk_index = list(person["opks"].keys())[0]
 
     bundle = dict(

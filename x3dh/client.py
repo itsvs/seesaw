@@ -21,7 +21,9 @@ PRIV_FORMAT = serialization.PrivateFormat.Raw
 PUB_FORMAT = serialization.PublicFormat.Raw
 ENCRYPTION = serialization.NoEncryption
 
-F = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.to_bytes(32, 'big')
+F = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF .to_bytes(
+    32, "big"
+)
 SERVER = "http://localhost:5000"
 
 app = Flask(__name__)
@@ -157,21 +159,21 @@ def all_data():
         username=username,
         port=request.host.split(":")[-1],
         identity=dict(
-            public=bstr(public_bytes(bundle['identity'].public_key())),
-            private=bstr(private_bytes(bundle['identity'])),
+            public=bstr(public_bytes(bundle["identity"].public_key())),
+            private=bstr(private_bytes(bundle["identity"])),
         ),
         spk=dict(
-            public=bstr(public_bytes(bundle['spk'].public_key())),
-            private=bstr(private_bytes(bundle['spk'])),
+            public=bstr(public_bytes(bundle["spk"].public_key())),
+            private=bstr(private_bytes(bundle["spk"])),
         ),
-        signature=bstr(bundle['signature']),
+        signature=bstr(bundle["signature"]),
         opks={
             k: dict(
                 public=bstr(public_bytes(v.public_key())),
                 private=bstr(private_bytes(v)),
             )
-            for k, v in bundle['opks'].items()
-        }
+            for k, v in bundle["opks"].items()
+        },
     )
 
 
@@ -191,7 +193,7 @@ def sign(identity: X25519PrivateKey, spk: X25519PublicKey):
     data = hash(public_bytes(spk))
     id_bytes = private_bytes(identity)
     xed = XEd25519(id_bytes, None)
-    return xed.sign(data = data)
+    return xed.sign(data=data)
 
 
 def verify(identity: X25519PublicKey, spk: X25519PublicKey, signature: bytes):
@@ -233,10 +235,7 @@ def initialize_bundle():
     identity = bstr(public_bytes(identity.public_key()))
     spk = bstr(public_bytes(spk.public_key()))
     signature = bstr(signature)
-    opks = {
-        k: bstr(public_bytes(v.public_key()))
-        for k, v in opks.items()
-    }
+    opks = {k: bstr(public_bytes(v.public_key())) for k, v in opks.items()}
 
     requests.post(
         f"{SERVER}/register_user",
@@ -246,7 +245,7 @@ def initialize_bundle():
                 identity=identity,
                 spk=spk,
                 signature=signature,
-                opks=opks,  
+                opks=opks,
             ),
             port=port,
         ),
@@ -256,14 +255,20 @@ def initialize_bundle():
 def public_bytes(key: X25519PublicKey):
     return key.public_bytes(encoding=ENCODING, format=PUB_FORMAT)
 
+
 def private_bytes(key: X25519PrivateKey):
-    return key.private_bytes(encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION())
+    return key.private_bytes(
+        encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION()
+    )
+
 
 def bstr(data: bytes):
-    return b64encode(data).decode('utf-8')
+    return b64encode(data).decode("utf-8")
+
 
 def strb(data: str):
-    return b64decode(data.encode('utf-8'))
+    return b64decode(data.encode("utf-8"))
+
 
 def hash(data: bytes):
     hasher = hashes.Hash(hashes.SHA512())
@@ -273,8 +278,9 @@ def hash(data: bytes):
 
 if __name__ == "__main__":
     import socket
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("",0))
+    s.bind(("", 0))
     s.listen(1)
     port = s.getsockname()[1]
     s.close()

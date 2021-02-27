@@ -6,10 +6,10 @@ import zipfile
 
 from urllib.request import urlopen
 
-ref10_dir  = os.path.abspath("ref10")
+ref10_dir = os.path.abspath("ref10")
 module_dir = os.path.join(ref10_dir, "crypto_sign")
-bin_dir    = os.path.join(ref10_dir, "bin")
-build_dir  = os.path.join(ref10_dir, "build")
+bin_dir = os.path.join(ref10_dir, "bin")
+build_dir = os.path.join(ref10_dir, "build")
 
 library_header = os.path.join(module_dir, "module.h")
 
@@ -27,68 +27,60 @@ libraries = [
     "kernelrandombytes_static",
     "crypto_rng_static",
     "crypto_stream_static",
-    "crypto_core_static"
+    "crypto_core_static",
 ]
+
 
 class UnknownSystemException(Exception):
     pass
 
+
 def call_cmake(output):
     try:
         # Try to call CMake
-        subprocess.check_call([ "cmake", "-G", output, ".." ], cwd = build_dir)
+        subprocess.check_call(["cmake", "-G", output, ".."], cwd=build_dir)
     except FileNotFoundError:
         # If that call fails, try to install CMake using the "cmake" package.
 
         # First, try to install it with --user
         try:
-            subprocess.check_call([
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "cmake",
-                "--user"
-            ])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "cmake", "--user"]
+            )
 
             # Make sure the newly installed CMake executables can be found in the path
             os.path.append(os.path.expanduser("~/.local/bin"))
         except subprocess.CalledProcessError:
             # If installing with --user fails, try a global installation
-            subprocess.check_call([
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "cmake"
-            ])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "cmake"])
 
         # If either of the local or global installations worked, try again.
-        subprocess.check_call([ "cmake", "-G", output, ".." ], cwd = build_dir)
+        subprocess.check_call(["cmake", "-G", output, ".."], cwd=build_dir)
+
 
 if os.name == "posix":
     # On UNIX, we HAVE to make the ref10 libraries, because the kernelrandombytes module
     # can vary between different UNIX systems.
     print("Attempting to compile the ref10 library...")
-    print("The compilation requires CMake and the \"make\" tool.")
-    print("The \"cmake\" and \"make\" commands are used.")
+    print('The compilation requires CMake and the "make" tool.')
+    print('The "cmake" and "make" commands are used.')
 
     call_cmake("Unix Makefiles")
-    subprocess.check_call([ "make" ], cwd = build_dir)
+    subprocess.check_call(["make"], cwd=build_dir)
 
     print("Library built successfully!")
 elif os.name == "nt":
-    libraries += [ "ADVAPI32" ]
+    libraries += ["ADVAPI32"]
 
     # On Windows, there is only one possible version of the kernelrandombytes module:
     # rtlgenrandom. Thus, precompiled binaries can be used.
     print("Attempting to compile the ref10 library...")
     print("The compilation requires CMake and a MinGW environment.")
-    print("The \"cmake\" and \"mingw32-make\" commands are used.")
+    print('The "cmake" and "mingw32-make" commands are used.')
 
     try:
         call_cmake("MinGW Makefiles")
-        subprocess.check_call([ "mingw32-make" ], cwd = build_dir)
+        subprocess.check_call(["mingw32-make"], cwd=build_dir)
 
         print("Library built successfully!")
     except subprocess.CalledProcessError:
@@ -106,13 +98,13 @@ elif os.name == "nt":
             )
 
         precompiled_windows_32bit = (
-            "https://github.com/Syndace/python-xeddsa/releases/download/v0.4.3-beta/" +
-            "bin-windows-x86.zip"
+            "https://github.com/Syndace/python-xeddsa/releases/download/v0.4.3-beta/"
+            + "bin-windows-x86.zip"
         )
 
         precompiled_windows_64bit = (
-            "https://github.com/Syndace/python-xeddsa/releases/download/v0.4.3-beta/" +
-            "bin-windows-amd64.zip"
+            "https://github.com/Syndace/python-xeddsa/releases/download/v0.4.3-beta/"
+            + "bin-windows-amd64.zip"
         )
 
         url = precompiled_windows_64bit if is_64bit else precompiled_windows_32bit
@@ -149,8 +141,8 @@ with open(library_header) as f:
 ffibuilder.set_source(
     "_crypto_sign",
     '#include "' + library_header + '"',
-    library_dirs = [ bin_dir ],
-    libraries    = libraries
+    library_dirs=[bin_dir],
+    libraries=libraries,
 )
 
 if __name__ == "__main__":
