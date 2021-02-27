@@ -106,12 +106,6 @@ returned as well. When the client performing the handshake sends
 information to the receiving client, the server will print the data
 being forwarded as well.
 
-You'll notice that all keypairs are being stored in `.data`. This is
-entirely unnecessary, and in a real scenario, the server will not have
-this information. The keypairs for every user will be stored in that
-user's local storage, otherwise the entire premise of security is
-compromised. The server will store only the relevant public keys.
-
 ## License
 
 This experiment is licensed under the MIT license, though honestly

@@ -22,7 +22,6 @@ PUB_FORMAT = serialization.PublicFormat.Raw
 ENCRYPTION = serialization.NoEncryption
 
 F = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.to_bytes(32, 'big')
-DATA = ".data"
 SERVER = "http://localhost:5000"
 
 app = Flask(__name__)
@@ -46,9 +45,9 @@ def perform_handshake():
     print(f"Performing handshake with {person}.")
 
     prekey_bundle = requests.get(f"{SERVER}/get_prekey_bundle/{person}").json()
-    identity = X25519PublicKey.from_public_bytes(b64decode(prekey_bundle["identity"].encode('utf-8')))
-    spk = X25519PublicKey.from_public_bytes(b64decode(prekey_bundle["spk"].encode('utf-8')))
-    signature = b64decode(prekey_bundle["signature"].encode('utf-8'))
+    identity = X25519PublicKey.from_public_bytes(strb(prekey_bundle["identity"]))
+    spk = X25519PublicKey.from_public_bytes(strb(prekey_bundle["spk"]))
+    signature = strb(prekey_bundle["signature"])
 
     if not verify(identity, spk, signature):
         print("SIGNED PREKEY VERIFICATION FAILED. ABORTING.")
@@ -57,7 +56,7 @@ def perform_handshake():
     self_id = bundle["identity"]
 
     opk_index = prekey_bundle["opk_index"]
-    opk = X25519PublicKey.from_public_bytes(b64decode(prekey_bundle["opk"].encode('utf-8')))
+    opk = X25519PublicKey.from_public_bytes(strb(prekey_bundle["opk"]))
 
     ephemeral = X25519PrivateKey.generate()
     dh1 = self_id.exchange(spk)
@@ -71,20 +70,13 @@ def perform_handshake():
         algorithm=hashes.SHA512(), length=32, salt=None, info=b"handshake"
     ).derive(F + dh)
 
-    self_id = self_id.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)
-    ephemeral = ephemeral.public_key().public_bytes(
-        encoding=ENCODING, format=PUB_FORMAT
-    )
+    self_id = public_bytes(self_id.public_key())
+    ephemeral = public_bytes(ephemeral.public_key())
 
     del dh1, dh2, dh3, dh4, dh
 
-    ik_a = hashes.Hash(hashes.SHA512())
-    ik_a.update(self_id)
-    ik_a = ik_a.finalize()
-
-    ik_b = hashes.Hash(hashes.SHA512())
-    ik_b.update(identity.public_bytes(encoding=ENCODING, format=PUB_FORMAT))
-    ik_b = ik_b.finalize()
+    ik_a = hash(self_id)
+    ik_b = hash(public_bytes(identity))
 
     associated_data = ik_a + ik_b
     nonce = os.urandom(12)
@@ -99,11 +91,11 @@ def perform_handshake():
         json=dict(
             sender_uid=hashlib.sha1(username.encode("utf-8")).hexdigest(),
             send_to=person,
-            identity=b64encode(self_id).decode('utf-8'),
-            ephemeral=b64encode(ephemeral).decode('utf-8'),
+            identity=bstr(self_id),
+            ephemeral=bstr(ephemeral),
             index=opk_index,
-            nonce=b64encode(nonce).decode('utf-8'),
-            aead=b64encode(aead).decode('utf-8'),
+            nonce=bstr(nonce),
+            aead=bstr(aead),
         ),
     ).json()["success"]
 
@@ -123,12 +115,12 @@ def receive_handshake():
 
     print(f"Received a handshake request from UID {uid}!")
 
-    identity = X25519PublicKey.from_public_bytes(b64decode(data["identity"].encode('utf-8')))
-    ephemeral = X25519PublicKey.from_public_bytes(b64decode(data["ephemeral"].encode('utf-8')))
+    identity = X25519PublicKey.from_public_bytes(strb(data["identity"]))
+    ephemeral = X25519PublicKey.from_public_bytes(strb(data["ephemeral"]))
     index = data["index"]
     opk = bundle["opks"].pop(index)
-    nonce = b64decode(data["nonce"].encode('utf-8'))
-    aead = b64decode(data["aead"].encode('utf-8'))
+    nonce = strb(data["nonce"])
+    aead = strb(data["aead"])
 
     dh1 = bundle["spk"].exchange(identity)
     dh2 = bundle["identity"].exchange(ephemeral)
@@ -141,16 +133,10 @@ def receive_handshake():
         algorithm=hashes.SHA512(), length=32, salt=None, info=b"handshake"
     ).derive(F + dh)
 
-    os.remove(f"{DATA}/{username}/opk{index}")
     del dh, dh1, dh2, dh3, dh4, opk
 
-    ik_a = hashes.Hash(hashes.SHA512())
-    ik_a.update(identity.public_bytes(encoding=ENCODING, format=PUB_FORMAT))
-    ik_a = ik_a.finalize()
-
-    ik_b = hashes.Hash(hashes.SHA512())
-    ik_b.update(bundle["identity"].public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT))
-    ik_b = ik_b.finalize()
+    ik_a = hash(public_bytes(identity))
+    ik_b = hash(public_bytes(bundle["identity"].public_key()))
 
     associated_data = ik_a + ik_b
     message = ChaCha20Poly1305(shared_key).decrypt(nonce, aead, associated_data)
@@ -171,45 +157,39 @@ def all_data():
         username=username,
         port=request.host.split(":")[-1],
         identity=dict(
-            public=b64encode(bundle['identity'].public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)).decode('utf-8'),
-            private=b64encode(bundle['identity'].private_bytes(encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION())).decode('utf-8'),
+            public=bstr(public_bytes(bundle['identity'].public_key())),
+            private=bstr(private_bytes(bundle['identity'])),
         ),
         spk=dict(
-            public=b64encode(bundle['spk'].public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)).decode('utf-8'),
-            private=b64encode(bundle['spk'].private_bytes(encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION())).decode('utf-8'),
+            public=bstr(public_bytes(bundle['spk'].public_key())),
+            private=bstr(private_bytes(bundle['spk'])),
         ),
-        signature=b64encode(bundle['signature']).decode('utf-8'),
+        signature=bstr(bundle['signature']),
         opks={
             k: dict(
-                public=b64encode(v.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)).decode('utf-8'),
-                private=b64encode(v.private_bytes(encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION())).decode('utf-8'),
+                public=bstr(public_bytes(v.public_key())),
+                private=bstr(private_bytes(v)),
             )
             for k, v in bundle['opks'].items()
         }
     )
 
 
-def sign(identity: X25519PrivateKey, spk: X25519PrivateKey):
+def sign(identity: X25519PrivateKey, spk: X25519PublicKey):
     """Uses the `identity` private key to sign a hashed
     version of the `spk` public key.
 
     :param identity: the user's identity
     :type identity: X25519PrivateKey
     :param spk: the user's signed prekey
-    :type spk: X25519PrivateKey
+    :type spk: X25519PublicKey
 
     :return: the byte sequence representing an EdDSA signature
     on the hashed `spk` public key
     :rtype: bytes
     """
-    digest = hashes.Hash(hashes.SHA512())
-    digest.update(spk.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT))
-    data = digest.finalize()
-
-    id_bytes = identity.private_bytes(
-        encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION()
-    )
-
+    data = hash(public_bytes(spk))
+    id_bytes = private_bytes(identity)
     xed = XEd25519(id_bytes, None)
     return xed.sign(data = data)
 
@@ -228,11 +208,8 @@ def verify(identity: X25519PublicKey, spk: X25519PublicKey, signature: bytes):
     :return: whether the verificaiton was successful or not
     :rtype: bool
     """
-    digest = hashes.Hash(hashes.SHA512())
-    digest.update(spk.public_bytes(encoding=ENCODING, format=PUB_FORMAT))
-    data = digest.finalize()
-
-    id_bytes = identity.public_bytes(encoding=ENCODING, format=PUB_FORMAT)
+    data = hash(public_bytes(spk))
+    id_bytes = public_bytes(identity)
     xed = XEd25519(None, id_bytes)
 
     try:
@@ -243,55 +220,21 @@ def verify(identity: X25519PublicKey, spk: X25519PublicKey, signature: bytes):
 
 
 def initialize_bundle():
-    dir = f"{DATA}/{username}"
-    if not os.path.exists(dir):
-        os.mkdir(dir)
-
     identity = X25519PrivateKey.generate()
-    with open(f"{dir}/ik", "wb") as f:
-        f.write(
-            identity.private_bytes(
-                encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION()
-            )
-        )
-
     spk = X25519PrivateKey.generate()
-    with open(f"{dir}/spk", "wb") as f:
-        f.write(
-            spk.private_bytes(
-                encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION()
-            )
-        )
-
-    signature = sign(identity, spk)
-
-    opks = {}
-    for i in range(5):
-        opk = X25519PrivateKey.generate()
-        with open(f"{dir}/opk{i}", "wb") as f:
-            f.write(
-                opk.private_bytes(
-                    encoding=ENCODING,
-                    format=PRIV_FORMAT,
-                    encryption_algorithm=ENCRYPTION(),
-                )
-            )
-        opks[str(i)] = opk
+    signature = sign(identity, spk.public_key())
+    opks = {str(i): X25519PrivateKey.generate() for i in range(5)}
 
     bundle["identity"] = identity
     bundle["spk"] = spk
     bundle["signature"] = signature
     bundle["opks"] = opks
 
-    identity = (
-        identity
-        .public_key()
-        .public_bytes(encoding=ENCODING, format=PUB_FORMAT)
-    )
-    spk = spk.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)
-    signature = signature
+    identity = bstr(public_bytes(identity.public_key()))
+    spk = bstr(public_bytes(spk.public_key()))
+    signature = bstr(signature)
     opks = {
-        k: b64encode(v.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)).decode('utf-8')
+        k: bstr(public_bytes(v.public_key()))
         for k, v in opks.items()
     }
 
@@ -300,14 +243,32 @@ def initialize_bundle():
         json=dict(
             username=username,
             prekey_bundle=dict(
-                identity=b64encode(identity).decode('utf-8'),
-                spk=b64encode(spk).decode('utf-8'),
-                signature=b64encode(signature).decode('utf-8'),
+                identity=identity,
+                spk=spk,
+                signature=signature,
                 opks=opks,  
             ),
             port=port,
         ),
     )
+
+
+def public_bytes(key: X25519PublicKey):
+    return key.public_bytes(encoding=ENCODING, format=PUB_FORMAT)
+
+def private_bytes(key: X25519PrivateKey):
+    return key.private_bytes(encoding=ENCODING, format=PRIV_FORMAT, encryption_algorithm=ENCRYPTION())
+
+def bstr(data: bytes):
+    return b64encode(data).decode('utf-8')
+
+def strb(data: str):
+    return b64decode(data.encode('utf-8'))
+
+def hash(data: bytes):
+    hasher = hashes.Hash(hashes.SHA512())
+    hasher.update(data)
+    return hasher.finalize()
 
 
 if __name__ == "__main__":

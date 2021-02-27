@@ -9,12 +9,6 @@ if not os.path.exists("xeddsa/_crypto_sign.o"):
 app = Flask(__name__)
 connections = {}
 
-@app.before_first_request
-def init_workdir():
-    if not os.path.exists(".data"):
-        os.mkdir(".data")
-
-
 @app.route("/register_user", methods=["POST"])
 def register_user():
     data = request.json
