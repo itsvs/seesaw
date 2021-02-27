@@ -294,7 +294,6 @@ def initialize_bundle():
         k: b64encode(v.public_key().public_bytes(encoding=ENCODING, format=PUB_FORMAT)).decode('utf-8')
         for k, v in opks.items()
     }
-    port = request.host.split(":")[-1]
 
     requests.post(
         f"{SERVER}/register_user",

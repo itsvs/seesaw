@@ -1,2 +1,7 @@
 .data
 .vscode
+
+xeddsa/ref10/bin
+xeddsa/_crypto_sign.c
+xeddsa/_crypto_sign.cpython-39-darwin.so
+xeddsa/_crypto_sign.o

@@ -28,8 +28,8 @@ def index():
     return "It works!"
 
 
-@app.route("/all_data")
-def all_data():
+@app.route("/user_data")
+def user_data():
     return connections
 
 
@@ -41,7 +41,7 @@ def get_prekey_bundle(person: str):
     person = connections[person]['prekey_bundle']
     opk_index = list(person["opks"].keys())[0]
 
-    return dict(
+    bundle = dict(
         identity=person["identity"],
         spk=person["spk"],
         signature=person["signature"],
@@ -49,10 +49,14 @@ def get_prekey_bundle(person: str):
         opk=person["opks"].pop(opk_index),
     )
 
+    print(f"Returning bundle for {person}: {bundle}")
+    return bundle
+
 
 @app.route("/perform_handshake", methods=["POST"])
 def perform_handshake():
     data = request.json
+    print(f"Performing Handshake: {data}")
     port = connections[data.pop("send_to")]["port"]
 
     success = requests.post(f"http://localhost:{port}/receive_handshake", json=data).ok
