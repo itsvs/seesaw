@@ -116,4 +116,4 @@ compromised. The server will store only the relevant public keys.
 This experiment is licensed under the MIT license, though honestly
 you probably shouldn't use most of this in a production environment.
 
-See [LICENSE](LICENSE.md).
+See [LICENSE](../LICENSE.md).
