@@ -3,12 +3,18 @@
 This is a rudimentary implementation of the X3DH protocol used by the
 messaging app Signal. There are a few differences between the original
 implementation and this one, but for the most part this version follows
-the same cryptographic specifications as the ones outlined here.
+the same cryptographic specifications as the ones outlined
+[here](https://signal.org/docs/specifications/x3dh/).
 
 The `xeddsa` library is adapted from the `python-xeddsa` package, and
 has been modified to use `pynacl` instead of `libnacl`. The `xeddsa.ref10`
 library is copied from the same package, where it was adapted from the
 SUPERCOP library.
+
+I will add a summary of how the X3DH protocol works at some point. While
+you read the Signal documentation, you might also be interested in reading
+about the XEdDSA Signature Scheme. This I will not document, but you can
+find the specification [here](https://signal.org/docs/specifications/xeddsa/).
 
 ## Setting Up
 
