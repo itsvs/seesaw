@@ -103,7 +103,7 @@ def perform_handshake():
 
     if success:
         print("Handshake successful! Storing shared key.")
-        shared_keys[hashlib.sha1(person.encode("utf-8")).hexdigest()] = shared_key
+        shared_keys[hashlib.sha1(person.encode("utf-8")).hexdigest()] = dict(shared_key=shared_key, associated_data=associated_data)
     else:
         print("Handshake failed!")
 
@@ -149,7 +149,7 @@ def receive_handshake():
         abort(403)
 
     print("Validation successful! Storing shared_key.")
-    shared_keys[uid] = dict(shared_key=shared_key)
+    shared_keys[uid] = dict(shared_key=shared_key, associated_data=associated_data)
     return dict(success=True)
 
 
@@ -174,6 +174,13 @@ def all_data():
             )
             for k, v in bundle["opks"].items()
         },
+        connections={
+            k: dict(
+                sk = bstr(v.get("shared_key")),
+                ad = bstr(v.get("associated_data"))
+            )
+            for k, v in shared_keys.items()
+        }
     )
 
 
