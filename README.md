@@ -10,6 +10,9 @@ of end-to-end encrypted messaging algorithms.
 [X3DH](x3dh/): a rudimentary implementation of the X3DH
 exchange protocol in Python
 
+[Double Ratchet](dblratchet/): a rudimentary implementation
+of the Double Ratchet message encryption protocol in Python
+
 ## License
 
 All projects here are licensed under the MIT license.
