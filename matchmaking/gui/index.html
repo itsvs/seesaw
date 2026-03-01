@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Matchmaking Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Game Matchmaking Demo</h1>
+            <p>Visualize the matchmaking system with 70% game creation, 90% timer, and instant start at 100%</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Player Controls -->
+            <div class="card">
+                <h2>👤 Player Controls</h2>
+                <div class="player-controls">
+                    <div class="input-group">
+                        <label for="playerName">Player Name:</label>
+                        <input type="text" id="playerName" placeholder="Enter player name">
+                        <button id="enqueueBtn" onclick="enqueuePlayer()">Enqueue Player</button>
+                    </div>
+                    <div class="quick-actions">
+                        <button onclick="enqueueRandomPlayer()">Add Random Player</button>
+                        <button onclick="enqueueMultiplePlayers(5)">Add 5 Players</button>
+                        <button onclick="clearQueue()">Clear Queue</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coordinator Status -->
+            <div class="card">
+                <h2>🎯 Coordinator Status</h2>
+                <div id="coordinatorStatus">
+                    <div class="status-item">
+                        <span class="label">Queue Size:</span>
+                        <span id="queueSize" class="value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Active Games:</span>
+                        <span id="gameCount" class="value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Last Updated:</span>
+                        <span id="lastUpdated" class="value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Queue -->
+            <div class="card">
+                <h2>📋 Player Queue</h2>
+                <div id="playerQueue" class="queue-container">
+                    <p class="empty-state">No players in queue</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Servers Grid -->
+        <div class="card full-width">
+            <h2>🏟️ Game Servers</h2>
+            <div id="gameServers" class="games-grid">
+                <p class="empty-state">No game servers running</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="refreshBtn" onclick="refreshStatus()">🔄 Refresh</button>
+            <button id="autoRefreshBtn" onclick="toggleAutoRefresh()">⏰ Auto Refresh: OFF</button>
+            <button onclick="resetDemo()">🔄 Reset Demo</button>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="connectionStatus">🔴 Disconnected</span>
+            <span id="autoRefreshStatus"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

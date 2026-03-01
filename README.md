@@ -16,6 +16,11 @@ Ratchet message encryption protocol in Python
 [Rust-like Errors in Go](go_errors/): an exploration of errors in Go and how we
 could make them better (or worse, depending on your point of view)
 
+[Game Matchmaking](matchmaking/): a demo of how matchmaking for multiplayer
+games (e.g. battle royale games) might work, with a game coordinator that
+manages player queues and starts new games as needed; this was made entirely
+using Claude Code as a personal attempt to get better at using AI coding tools
+
 [Multi-language Go Projects](multilang/): a brief exploration of running C or
 Assembly as part of a Go program
 
