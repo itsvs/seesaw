@@ -1,0 +1,18 @@
+all: false
+dir: '{{.InterfaceDir}}'
+filename: mocks.go
+force-file-write: true
+formatter: goimports
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}'
+recursive: true
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+packages:
+  github.com/itsvs/seesaw/goutils/policyengine:
+    config:
+      all: false
+      filename: mock_interface.go
+      include-interface-regex: '^(EngineBaggage|StepOutput|Step|Engine)$'
